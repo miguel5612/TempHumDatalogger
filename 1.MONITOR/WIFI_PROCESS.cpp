@@ -34,13 +34,17 @@ void WIFI_PROCESS::inicializar(){
 void WIFI_PROCESS::publicarBlynk(float h, float t)
 {
   //Esta funcion actualiza en los moviles los datos visualizados de temperatura y humedad
+  String currentTime = onmoticaUtils.getOnlyTime();
+  String currentDate = onmoticaUtils.getOnlyDate();
+  
   Blynk.virtualWrite(V5, h);
   Blynk.virtualWrite(V6, t);
 
   // Send time to the App
-  Blynk.virtualWrite(V1, onmoticaUtils.getOnlyTime());
+  Blynk.virtualWrite(V1, currentTime);
   // Send date to the App
-  Blynk.virtualWrite(V2, onmoticaUtils.getOnlyDate());
+  Blynk.virtualWrite(V2, currentDate);
+
 }
 void WIFI_PROCESS::cicloBlynk()
 {
