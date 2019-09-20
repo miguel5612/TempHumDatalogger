@@ -64,7 +64,7 @@ String onmotica::getOnlyDate()
    uint8_t seconds = ti->tm_sec;
    String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
 
-   return dayStr + "/" + monthStr + "/" + yearStr;
+   return dayStr + " " + monthStr + " " + yearStr;
 }
 String onmotica::getTime()
 {
