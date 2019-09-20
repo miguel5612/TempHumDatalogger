@@ -7,6 +7,8 @@ class onmotica {
   public:
     void init();
     String getTime();
+    String getOnlyDate();
+    String getOnlyTime();
   private:
     String __fecha;
 };

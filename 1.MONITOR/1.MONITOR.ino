@@ -1,4 +1,3 @@
-#include "SERIAL_COMMUNICATION.h"
 #include "PROCESS_DATA.h"
 #include "WIFI_PROCESS.h"
 #include "MEMORY_ADMINISTRATION.h"
@@ -15,7 +14,6 @@
 #include "Adafruit_SHT31.h"
 
 
-SERIAL_COMMUNICATION serial;
 PROCESS_DATA procesamiento;
 WIFI_PROCESS WiFiProcess;
 MEMORY_ADMINISTRATION administracion;
@@ -31,6 +29,7 @@ int serverConnectedIndex = 0;
 
 unsigned long lastPublishedTime = 0;
 unsigned long lastGetPetition = 0;
+unsigned long lastBlynkPetition = 0;
 
 
 WiFiClient espClient;
@@ -42,8 +41,6 @@ void setup() {
       Serial.println("Couldn't find SHT31");
       while (1) delay(1);
     }
-    //Inicializacion de los pines, memoria SD y WiFi
-    //pinesIO.inicializar();
     Serial.begin(115200);
     
     WiFiProcess.inicializar();
@@ -92,11 +89,13 @@ void loop() {
     
     //if((millis() - lastPublishedTime)>maxTimeWithNoPublish)  memoriaSD.saveIntoLogMsg("Han pasado " + String(maxTimeWithNoPublish/60000) + " minutos sin enviar actualizaciones" , administracion.freeSpaceReportSerial() , WiFiProcess.wifiIsConnected()?"Conectado":"Desconectado", mqttIsConnected()?"Conectado":"Desconectado", true);   
     if((millis() -lastGetPetition)>maxTimeWithNoPublish) WiFiProcess.getPetition(URL); //Despertar al servidor haciendo una peticion cada media hora
-    if((millis() -lastGetPetition)>3000)
+    while((millis() -lastBlynkPetition)< 3000)
     {      
       mqttClient.loop();
       WiFiProcess.cicloBlynk();
     }
+    lastBlynkPetition = millis();
+    
 }
 void sendMQTTMsgPacket(int countMsgToSend)
 {

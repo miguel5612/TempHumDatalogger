@@ -1,9 +1,11 @@
 #include "WIFI_PROCESS.h"
 #include "configuration.h"
+#include "onmotica.h"
 #include <WiFiManager.h>  
 #include <ESP8266HTTPClient.h>
 
 WiFiManager wifiManager;
+onmotica onmoticaUtils;
 
 #define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
@@ -15,10 +17,18 @@ void WIFI_PROCESS::inicializar(){
    WiFiManagerParameter custom_blynk_token("Blynk", "blynk token", auth, 33);
    wifiManager.addParameter(&custom_blynk_token);
    while (!wifiManager.autoConnect(wiFiname)) {
-      if(serDebug) Serial.println("Connection to hostname failed, restarting in 5 seconds");
-      Blynk.config(custom_blynk_token.getValue());
+      if(serDebug) Serial.println("Connection to hostname failed, restarting in 5 seconds");      
       delay(minDelay);
   }
+  Blynk.config(custom_blynk_token.getValue());
+  /*
+  Serial.print("User:");
+  Serial.println(WiFi.SSID().c_str());
+  Serial.print("Pssw:");
+  Serial.println(WiFi.psk().c_str());
+ */ 
+ Blynk.begin(custom_blynk_token.getValue(), WiFi.SSID().c_str(), WiFi.psk().c_str());
+ 
 }
 
 void WIFI_PROCESS::publicarBlynk(float h, float t)
@@ -26,6 +36,11 @@ void WIFI_PROCESS::publicarBlynk(float h, float t)
   //Esta funcion actualiza en los moviles los datos visualizados de temperatura y humedad
   Blynk.virtualWrite(V5, h);
   Blynk.virtualWrite(V6, t);
+
+  // Send time to the App
+  Blynk.virtualWrite(V1, onmoticaUtils.getOnlyTime());
+  // Send date to the App
+  Blynk.virtualWrite(V2, onmoticaUtils.getOnlyDate());
 }
 void WIFI_PROCESS::cicloBlynk()
 {
