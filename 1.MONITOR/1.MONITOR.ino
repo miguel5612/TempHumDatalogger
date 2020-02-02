@@ -4,6 +4,9 @@
 #include "PINS.h"
 #include "onmotica.h"
 #include "configuration.h"
+#include "LCD.h"
+#include "MICROSD.h"
+
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -16,33 +19,40 @@
 
 PROCESS_DATA procesamiento;
 WIFI_PROCESS WiFiProcess;
-MEMORY_ADMINISTRATION administracion;
+MEMORY_ADMINISTRATION memory;
 PINS pinesIO;
 onmotica utils;
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
+MICROSD memoriaSd;
+LCD pantallaLCD;
+
 
 static const int count_mqtt_server = 3;
 static char* mqtt_server[count_mqtt_server] = { "mqtt.onmotica.com", "mqtt2.onmotica.com", "mqtt3.onmotica.com"};
 char* __mqttServerConnected;
 const int serverPort = 1883;
 int serverConnectedIndex = 0;
-
+int pin = A0; //Pin A0 TEMP_AD
 unsigned long lastPublishedTime = 0;
 unsigned long lastGetPetition = 0;
 unsigned long lastBlynkPetition = 0;
-
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 void setup() {
+
+  pinMode(pin, INPUT); // pin A0 TEMP_ADJ
     
     if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
       Serial.println("Couldn't find SHT31");
       while (1) delay(1);
     }
     Serial.begin(115200);
-    
+
+    pantallaLCD.inicializar();
+    memoriaSd.inicializar();
+    pantallaLCD.mostrarMensajeLinea1("WiFi: X          ");
     WiFiProcess.inicializar();
 
     String resultPetition = WiFiProcess.getPetition(URL);
@@ -52,9 +62,8 @@ void setup() {
     utils.init();
 
     procesamiento.setTimeToWait(procesamiento.generateRandom());
-}
 
-
+ }
 void loop() {
   
     if(!WiFiProcess.wifiIsConnected()) setup(); //Reinicio si no hay wifi
@@ -63,11 +72,11 @@ void loop() {
     
     float temperatura = sht31.readTemperature();
     float humedad = sht31.readHumidity();
-
     //Calcular y guardar la fecha
     String fecha = utils.getTime();
     procesamiento.setFecha(fecha);
-    Serial.println(fecha);
+
+    
     if (isnan(humedad) || isnan(temperatura)) {
         Serial.println("Failed to read from SHT31 sensor!");
         temperatura = 0;
@@ -75,7 +84,22 @@ void loop() {
     }
     else
     {
+       double val  = analogRead(pin); // PIN A0_TEMP ADJ
+       double offset = (0.009765*val)-5;
+       temperatura = temperatura + offset;
+       
       WiFiProcess.publicarBlynk(humedad, temperatura); //Actualiza en los celulares
+      String temperatura2excel = String(temperatura);
+      temperatura2excel.replace(".",",");
+      String humedad2excel = String(humedad);
+      humedad2excel.replace(".",",");
+      String strOff = String(offset);
+      strOff.replace(".",",");
+      
+      String mensaje = temperatura2excel + " ;" + humedad2excel + " ;" + fecha + ";" + strOff + ";";
+      memoriaSd.imprimirLinea(mensaje);
+      pantallaLCD.mostrarMensajeLinea2(String(temperatura) + " - " + String(humedad));
+      
     }
     //Mensaje MQTT
 
@@ -85,6 +109,10 @@ void loop() {
     {
       procesamiento.setTimeToWait(procesamiento.generateRandom());
       sendMQTTMsgPacket(procesamiento.getIndex());
+    }
+    else
+    {
+      pantallaLCD.mostrarMensajeLinea1("Monitorlab.team ");
     }
     
     //if((millis() - lastPublishedTime)>maxTimeWithNoPublish)  memoriaSD.saveIntoLogMsg("Han pasado " + String(maxTimeWithNoPublish/60000) + " minutos sin enviar actualizaciones" , administracion.freeSpaceReportSerial() , WiFiProcess.wifiIsConnected()?"Conectado":"Desconectado", mqttIsConnected()?"Conectado":"Desconectado", true);   
@@ -103,8 +131,10 @@ void sendMQTTMsgPacket(int countMsgToSend)
   char buf[len];
   procesamiento.resetMsgQeueCounter();
 
-  for(int i=0; i<=countMsgToSend; i++)
+  for(int i=0; i<=countMsgToSend - 1; i++)
   {
+    Serial.println("Preparando Json #" + String(i+1));
+    pantallaLCD.mostrarMensajeLinea1("Publicando: " + String(i+1));
     String mensajeJson = procesamiento.getJSON(i);
     mensajeJson.toCharArray(buf, len);
     savePublishStatusMQTT(publicarInformacion(buf));
@@ -136,7 +166,7 @@ boolean publicarInformacion(char JSON[260]){
     {
       if (mqttClient.publish(inTopic, JSON) == true) {
         
-        if(serDebug) Serial.println("El mensaje se ha publciado correctamente");
+        if(serDebug) Serial.println("El mensaje se ha publicado correctamente");
         
         isPublished = true;
         if(serDebug) Serial.println("Publicado!!! :)");

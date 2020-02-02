@@ -31,6 +31,19 @@ void WIFI_PROCESS::inicializar(){
  
 }
 
+void  notifyOnButtonPress ()
+{
+  // Invertir estado, ya que el botón está "Activo BAJO"
+  int isButtonPressed =! digitalRead ( 2 );
+  if (isButtonPressed) {
+    Serial.println ( " Se presiona el botón " );
+
+    // Nota:
+    //    Permitimos 1 notificación por 5 segundos por ahora.
+    Blynk.notify ( " Yaaay ... se presiona el botón " );
+   }
+   }
+
 void WIFI_PROCESS::publicarBlynk(float h, float t)
 {
   //Esta funcion actualiza en los moviles los datos visualizados de temperatura y humedad
@@ -39,11 +52,15 @@ void WIFI_PROCESS::publicarBlynk(float h, float t)
   
   Blynk.virtualWrite(V5, h);
   Blynk.virtualWrite(V6, t);
-
+ 
   // Send time to the App
   Blynk.virtualWrite(V1, currentTime);
   // Send date to the App
   Blynk.virtualWrite(V2, currentDate);
+
+  Blynk.virtualWrite(V7, "Monitor v1");
+  Blynk.virtualWrite(V8, "CENS CÚCUTA");
+  
 
 }
 void WIFI_PROCESS::cicloBlynk()
