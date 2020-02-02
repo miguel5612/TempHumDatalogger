@@ -196,6 +196,8 @@ void publicarMQTT()
   
   if (mqttClient.publish(inTopic, JSONmessageBuffer) == true) {
         Serial.println("Publicado!!! :)");
+        lcd.setCursor(0,0);
+        lcd.print("***MQTT OK***");
       } else {
         Serial.println("No se ha podido publicar");
         lcd.setCursor(0,0);
