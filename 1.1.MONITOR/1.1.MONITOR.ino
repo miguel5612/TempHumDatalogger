@@ -44,6 +44,10 @@ char auth[] = "g4HK21Y2NyNNRdiO24nJUGDRmJZrUbHS"; // Token del modulo 1
 #define outTopic "/Cens/Cucuta/Lab_calibracion/Output"
 #define inTopic "/Cens/Cucuta/Lab_calibration/Input"
 #define wiFiname "Cens_Cucuta_Lab_Calibracion"
+#define sensorError "****sensor error****"
+#define sdError "****SD error****"
+#define mqttError "****MQTT error****"
+#define wifiError "****WiFi error****"
 
 //Instanciacion de las librerias
 LiquidCrystal_I2C lcd(0x3F,16,2);
@@ -54,6 +58,9 @@ WiFiUDP ntpUDP;
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 NTPClient timeClient(ntpUDP, "south-america.pool.ntp.org", utcOffsetInSeconds);
+
+//sensor error, SD error, MQTT error, WiFi error
+int errores[4] = {0, 0, 0, 0};
 
 void setup() {
   //Inicializacion de librerias
@@ -69,22 +76,19 @@ void setup() {
   
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
       Serial.println("Error encontrando el sensor");
-      lcd.setCursor(0,1);
-      lcd.print("***Sensor error***");
+      errores[0] = 1;
   }       
 
   if (!SD.begin(D8)) {
     Serial.println("Error de memoria SD");
-    lcd.setCursor(0,1);
-    lcd.print("***SD error***");
+      errores[1] = 1;
   }
 
   WiFiManagerParameter custom_blynk_token("Blynk", "blynk token", auth, 33);
   wifiManager.addParameter(&custom_blynk_token);
   while (!wifiManager.autoConnect(wiFiname)) {
       Serial.println("Fallo al conectarse, reintentando...");      
-      lcd.setCursor(0,1);
-      lcd.print("***WiFi error***");
+      errores[3] = 1;
       delay(5000);
   }
   Blynk.config(custom_blynk_token.getValue());
@@ -144,6 +148,9 @@ double getOffset()
   return (0.009765*val)-5;
 }
 
+unsigned long notificationTimeMillis;
+int notificationPointer = 0;
+
 void smartDelay(int mS)
 {
     lastTime = millis();
@@ -154,9 +161,10 @@ void smartDelay(int mS)
 
       //Ciclo de MQTT
       mqttClient.loop();
+
       
       //Si el valor es distinto al anterior impreso en pantalla lo muestra
-      if(abs((getOffset() - lastCal)*100) > 5)
+      if(abs((getOffset() - lastCal)*100) > 0.5)
       {
         lcd.setCursor(0,0); 
         lcd.print("                ");
@@ -165,7 +173,7 @@ void smartDelay(int mS)
         lcd.print(getOffset());
 
         lcd.print(" WiFi:");
-        lcd.print(WiFi.isConnected()?"OK":" F");
+        lcd.print(WiFi.isConnected()?"Y":" N");
         
         lastCal = getOffset();
         
@@ -173,12 +181,54 @@ void smartDelay(int mS)
         mostrarTempHumEnPantalla();  
   
       }
+      else
+      {
+        if(millis() - notificationTimeMillis > 6000)
+        {          
+          lcd.setCursor(0,0); 
+          lcd.print("                ");
+          lcd.setCursor(0,0); 
+          lcd.print(obtenerError());
+          notificationTimeMillis = millis();
+          notificationPointer++;
+          if(notificationPointer>3) notificationPointer = 0;
+        }
+        
+      }
 
       // Para que blink este actualizado
       calcularTemperaturaHumedad(); actualizarBlink();
       
       delay(100);     
     }
+}
+
+String obtenerError()
+{
+  if(errores[notificationPointer] == 1)
+  {
+    String error = "";
+    switch(notificationPointer)
+    {
+      case 0:
+        error = sensorError;
+        break;
+      case 1:
+        error = sdError;
+        break;
+      case 2:
+        error = mqttError;
+        break;
+      case 3:
+        error = wifiError;
+        break;
+    }
+    return error;
+  }
+  else 
+  {
+    return getOnlyDate() + " " +  getOnlyTime();
+  }
 }
 
 void publicarMQTT()
@@ -196,12 +246,10 @@ void publicarMQTT()
   
   if (mqttClient.publish(inTopic, JSONmessageBuffer) == true) {
         Serial.println("Publicado!!! :)");
-        lcd.setCursor(0,0);
-        lcd.print("***MQTT OK***");
+        errores[2] = 0;
       } else {
         Serial.println("No se ha podido publicar");
-        lcd.setCursor(0,0);
-        lcd.print("***Falla MQTT***");
+        errores[2] = 1;
       }
 }
 
