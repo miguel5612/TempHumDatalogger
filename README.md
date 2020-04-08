@@ -52,16 +52,16 @@
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/miguel5612/ML_TemperatureAnalisys_CENS.svg?style=flat-square
-[contributors-url]: https://github.com/miguel5612/ML_TemperatureAnalisys_CENS/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/miguel5612/ML_TemperatureAnalisys_CENS.svg?style=flat-square
-[forks-url]: https://github.com/miguel5612/MQSensorsLib/network/members
-[stars-shield]: https://img.shields.io/github/stars/miguel5612/MQSensorsLib.svg?style=flat-square
-[stars-url]: https://github.com/miguel5612/MQSensorsLib/stargazers
-[issues-shield]: https://img.shields.io/github/issues/miguel5612/MQSensorsLib.svg?style=flat-square
-[issues-url]: https://github.com/miguel5612/MQSensorsLib/issues
-[license-shield]: https://img.shields.io/github/license/miguel5612/MQSensorsLib.svg?style=flat-square
-[license-url]: https://github.com/miguel5612/MQSensorsLib/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/miguel5612/TempHumDatalogger.svg?style=flat-square
+[contributors-url]: https://github.com/miguel5612/TempHumDatalogger/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/miguel5612/TempHumDatalogger.svg?style=flat-square
+[forks-url]: https://github.com/miguel5612/TempHumDatalogger/network/members
+[stars-shield]: https://img.shields.io/github/stars/miguel5612/TempHumDatalogger.svg?style=flat-square
+[stars-url]: https://github.com/miguel5612/TempHumDatalogger/stargazers
+[issues-shield]: https://img.shields.io/github/issues/miguel5612/TempHumDatalogger.svg?style=flat-square
+[issues-url]: https://github.com/miguel5612/TempHumDatalogger/issues
+[license-shield]: https://img.shields.io/github/license/miguel5612/TempHumDatalogger.svg?style=flat-square
+[license-url]: https://github.com/miguel5612/TempHumDatalogger/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [build-url]: https://travis-ci.org/dwyl/esta.svg?branch=master
 [linkedin-url]: https://www.linkedin.com/in/miguel5612
